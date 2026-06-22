@@ -1,5 +1,5 @@
-name: "agentaudit"
-description: "Audit AI-agent extensions (Claude Code skills, MCP servers, plugins) for security & quality risks, with SARIF in GitHub code scanning."
+name: "Mujin agentaudit"
+description: "Scan AI-agent extensions (Claude Code skills, MCP servers, plugins) for security risks in CI, with SARIF."
 author: "Mujin Labs"
 branding:
   icon: "shield"
