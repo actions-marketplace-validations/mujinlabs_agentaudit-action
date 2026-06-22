@@ -1,0 +1,51 @@
+name: "agentaudit"
+description: "Audit AI-agent extensions (Claude Code skills, MCP servers, plugins) for security & quality risks, with SARIF in GitHub code scanning."
+author: "Mujin Labs"
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  path:
+    description: "File or directory to scan."
+    required: false
+    default: "."
+  fail-on:
+    description: "Minimum severity that fails the job: critical | high | medium | low | none."
+    required: false
+    default: "high"
+  version:
+    description: "mujin-agentaudit version to install (pinned for reproducibility)."
+    required: false
+    default: "0.2.0"
+  upload-sarif:
+    description: "Upload SARIF to GitHub code scanning (needs security-events: write)."
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install agentaudit
+      shell: bash
+      run: pipx install "mujin-agentaudit==${{ inputs.version }}"
+
+    - name: Scan (SARIF)
+      shell: bash
+      # --fail-on none so this step always produces a file; gating happens below.
+      run: agentaudit scan "${{ inputs.path }}" --format sarif --fail-on none > agentaudit.sarif
+
+    - name: Upload SARIF
+      if: ${{ inputs.upload-sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: agentaudit.sarif
+
+    - name: Gate
+      shell: bash
+      # Prints the human-readable report and sets the exit code per fail-on.
+      run: agentaudit scan "${{ inputs.path }}" --fail-on "${{ inputs.fail-on }}"
